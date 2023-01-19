@@ -2,10 +2,6 @@ import xarray as xr
 import numpy as np
 import os, fnmatch
 
-#t = xr.open_dataset('/home/users/co157815/cmip6_stratosphere/ta_day_ACCESS-ESM1-5_historical_r1i1p1f1_gn_20100101-20141231.nc')
-#u = xr.open_dataset('/home/users/co157815/cmip6_stratosphere/ua_day_ACCESS-ESM1-5_historical_r1i1p1f1_gn_20100101-20141231.nc')
-#v = xr.open_dataset('/home/users/co157815/cmip6_stratosphere/va_day_ACCESS-ESM1-5_historical_r1i1p1f1_gn_20100101-20141231.nc')
-
 def tita(T):
 	plev = T.plev
 	PT = T.ta*(plev/1000)**(-0.286)
@@ -112,6 +108,13 @@ def main():
 	list_models = [['ACCESS-ESM1-5','r1i1p1f1']]
 	path = '/home/users/co157815/cmip6_stratosphere'
 	path_out = '/home/users/co157815/cmip6_stratosphere'
+	os.chdir(path_out)
+	os.getcwd()
+	os.makedirs('heat_fluxes',exist_ok=True)
+	os.makedirs('momentum_fluxes',exist_ok=True)
+	os.makedirs('heat_flux_div',exist_ok=True)
+	os.makedirs('momentum_flux_div',exist_ok=True)
+	os.makedirs('total_flux_div',exist_ok=True)
 	for model in list_models:
 		#Open data
 		t,list_name = open_data(path+'/ta',model)
