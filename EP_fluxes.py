@@ -4,10 +4,11 @@ import xarray as xr
 import numpy as np
 import os, fnmatch
 import sys
+import bottleneck as bn #version 1.0.0
 
 def tita(T):
         plev = T.plev
-        PT = T.ta*(plev/1000)**(-0.286)
+        PT = T.ta*(plev/100000)**(-0.286)
         return PT
 
 def c_diff(arr, h, dim, cyclic = False):
@@ -34,6 +35,15 @@ def c_diff(arr, h, dim, cyclic = False):
         d_arr = np.transpose(d_arr, tuple(rank))
         return d_arr
 
+def c_diff_one(arr, h):
+#	print arr.shape
+	d_arr = np.copy(arr)
+	d_arr[0,...] = (arr[1,...]-arr[0,...])/(h[1]-h[0])
+	d_arr[-1,...] = (arr[-1,...]-arr[-2,...])/(h[-1]-h[-2])
+	d_arr[1:-1,...] = (arr[2:,...]-arr[0:-2,...])/(np.reshape(h[2:]-h[0:-2],(arr.shape[0]-2,1,1)))
+	return d_arr
+
+
 def dtitadp(tita):
         a = 6371000 #radius in meters
         tita = tita.mean(dim='lon') # less work if first take zonal mean
@@ -43,7 +53,7 @@ def dtitadp(tita):
         tita = tita.values.reshape(-1,tita.shape[0],tita.shape[1],tita.shape[2])
         dtitadlogp_arr = c_diff(tita,log_p,2)
         dtitadlogp.values = dtitadlogp_arr[0,:,:,:]
-        dtitadp = dtitadlogp/dtitadlogp.plev
+        dtitadp = dtitadlogp/np.log(dtitadlogp.plev)
         return dtitadp
 
 def dXdp(X):
@@ -60,7 +70,9 @@ def dXdlat(X):
         dxdlat = X.copy()
         lat = X.lat.values
         a = 6371000 #radius in meters
-        asinlat = a*np.sin(lat)
+        PI = np.pi
+        phi = lat*PI/180.0
+        asinlat = a*np.sin(phi)
         X = X.values.reshape(-1,X.shape[0],X.shape[1],X.shape[2])
         dxdasinlat_arr = c_diff(X,asinlat,3)
         dxdlat.values = dxdasinlat_arr[0,:,:,:]
@@ -74,17 +86,34 @@ def zonal_mean(X):
 
 def EP_fluxes(U,V,T):
         PT = tita(T)
-        dPTdp= dtitadp(PT)
+        #dPTdp= dtitadp(PT)
+        dPTdp = PT.mean(dim='lon').copy()
+        theta = T.ta.values*(np.reshape(T.plev.values,(1,len(T.plev.values),1,1))/100000.)**(-0.286)
+        theta_zm = bn.nanmean(theta, axis = 3)
+        loglevel = np.log(T.plev.values)
+
+        dPTdp_arr = np.transpose(c_diff_one(np.transpose(theta_zm,[1,0,2]), loglevel),[1,0,2])
+        dPTdp_arr /= 10000.*np.reshape(T.plev.values,(1,len(T.plev.values),1))
+        dPTdp.values = dPTdp_arr
+
+        lon = T.lon.values #dataset.variables['lon'][:]
         lat = U.lat
-        a = 6371000 #radius in meters
-        coslat = np.cos(lat*3.14/180)
-        omega = 7.2921e-5
-        f = 2*omega*np.sin(lat)
+        
+        #constants
+        a = 6.37122e06 
+        PI = np.pi
+        phi = lat*PI/180.0     
+        acphi=a*np.cos(phi)       
+        asphi=a*np.sin(phi)       
+        omega = 7.2921e-5      
+        f = 2*omega*np.sin(phi) 
+        latfac=acphi*np.cos(phi)
+        
         U_anom = zonal_anom(U); V_anom = zonal_anom(V); PT_anom = zonal_anom(PT);
         A = zonal_mean(U_anom.ua*V_anom.va)
         B = zonal_mean(PT_anom*V_anom.va)
-        EPp = (1/dPTdp)*f*a*B*coslat
-        EPphi = -a*A*coslat*coslat
+        EPp = (1/dPTdp)*f*B*acphi
+        EPphi = -A*latfac
         return EPp, EPphi
 
 def EP_flux_divergence(EPp,EPphi):
