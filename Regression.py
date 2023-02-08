@@ -21,6 +21,8 @@ class Regression:
         self._index = index
         self.name = model_name
         self._anomalies = anomalies
+        # Check that their is an index entry for every year of data
+        assert self.index.size == self.anomalies.shape[0]/12
         self._slope, self._pvalue = self.regression()
 
     @property
@@ -75,29 +77,31 @@ class Regression:
         return slope, pvalue
 
 class RegressionU1SPV(Regression):
-    """Subclass of Regression for handling the input for regressing zonal mean zonal wind anomalies at 1hPa onto the
+    """Subclass of Regression for handling the input for regressing zonal mean anomalies onto the
     SPV_Index. At the moment using 1979-2014 is hardcoded."""
-    def __init__(self, model_name, ua10_path, ua1_path):
+    def __init__(self, model_name, ua10_path, variable_path, plev=100, variable_name = 'ua'):
         """
         :param model_name:
         :type model_name: str
-        :param ua10_path: path to zonal mean (monthly mean) 10hPa zonal wind data
-        :type ua10_path: str
+        :param variable_path: path to zonal mean (monthly mean) data
+        :type variable_path: str
         :param ua1_path: path to zonal mean monthly mean 1hPa zonal wind data
         :type ua1_path: str
+        :param plev: pressure level to use
+        :type plev: int
         """
         # Read in 1hPa climatology and anomalies
-        climatology, anomalies = RegressionU1SPV.anomalies_read_in(ua1_path)
+        climatology, anomalies = RegressionU1SPV.anomalies_read_in(variable_path, plev)
         # Calculate SPV_Index
         spv_index = RegressionU1SPV.calc_spv_index(ua10_path)
         # Do the regression
-        super().__init__(model_name=model_name, index=spv_index, anomalies=anomalies['ua'])
-        self.climatology = climatology['ua']
+        super().__init__(model_name=model_name, index=spv_index, anomalies=anomalies[variable_name])
+        self.climatology = climatology[variable_name]
 
     @staticmethod
-    def anomalies_read_in(datapath):
+    def anomalies_read_in(datapath, plev):
         """Read in data and calculate monthly anomalies compared to climatology."""
-        model = RegressionU1SPV.xarray_read_in(datapath)
+        model = RegressionU1SPV.xarray_read_in(datapath, plev = plev)
         model = model.sel(lat=slice(0, -90))
         climatolotgy = model.groupby("time.month").mean("time")
         anomalies = model.groupby("time.month") - climatolotgy
@@ -106,16 +110,16 @@ class RegressionU1SPV(Regression):
     @staticmethod
     def calc_spv_index(datapath):
         """Read in data and calculate the SPV index as the SON mean at 60hPa."""
-        model = RegressionU1SPV.xarray_read_in(datapath)
+        model = RegressionU1SPV.xarray_read_in(datapath, plev = 1000)
         model = model.sel(lat=-60, method="nearest")
         spv_index = model.groupby("time.season")['SON'].groupby('time.year').mean('time')
         spv_index = spv_index['ua'] - spv_index['ua'].mean()
         return spv_index
 
     @staticmethod
-    def xarray_read_in(datapath):
+    def xarray_read_in(datapath, plev):
         model = xr.load_dataset(datapath)
-        model = model.isel(plev=0)
+        model = model.sel(plev=plev, method="nearest")
         model = model.sel(time=slice("1979-01-01", "2014-12-30"))
         return model
 
@@ -144,13 +148,13 @@ def plot_slope_data(ds, ax):
     x = slope.month.data
     X, Y = np.meshgrid(x, y)
 
-    absmax = max(slope.min(), slope.max(), key=abs)
+    absmax = max(abs(slope.min()), abs(slope.max()))
     # Plot the Slope
     im = ax.contourf(X, Y, slope.T, cmap='bwr', vmin=-absmax, vmax=absmax, levels=14)
     plt.colorbar(im, ax = ax)
 
     # Stipple the points that are significant
-    ax.scatter(stipp_coord_month, stipp_coord_lat, color='black', s=1)
+    ax.scatter(stipp_coord_month, stipp_coord_lat, color='black', s=1.5)
 
     # Plot climatology contour
     ax.contour(X, Y, climatology.T, colors='k')
