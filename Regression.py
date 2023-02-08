@@ -3,6 +3,7 @@ import xarray as xr
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 class Regression:
     """Regressed monthly resolved zonal mean anomalies onto a given yearly index. It saves the slope and corresponding pvalues (
@@ -123,7 +124,7 @@ class RegressionU1SPV(Regression):
         model = model.sel(time=slice("1979-01-01", "2014-12-30"))
         return model
 
-def plot_slope_data(ds, ax):
+def plot_slope_data(ds, ax, cbar_label = '', title = None):
     """Plot regression slopes with stippling for significance and climatology contours.
 
     :param ds: Holds the slope, pvalue and climatology data
@@ -131,9 +132,12 @@ def plot_slope_data(ds, ax):
     :param ax:
     :type ax:
     """
+    nlevls = 14
     slope = ds.slope
     pvalue = ds.pvalue
     climatology = ds.climatology
+    if title is None:
+        title = ds.name
 
     # Check that they all have the same dimensions, i.e. (12xnlat), 12 for the 12 months.
     assert slope.shape == climatology.shape
@@ -150,18 +154,24 @@ def plot_slope_data(ds, ax):
 
     absmax = max(abs(slope.min()), abs(slope.max()))
     # Plot the Slope
-    im = ax.contourf(X, Y, slope.T, cmap='bwr', vmin=-absmax, vmax=absmax, levels=14)
-    plt.colorbar(im, ax = ax)
+    cmap = mcolors.LinearSegmentedColormap.from_list(name='red_white_blue', 
+                                                 colors =[(0, 0, 1), 
+                                                          (1, 1., 1), 
+                                                          (1, 0, 0)],
+                                                 N=nlevls-1,)
+    
+    im = ax.contourf(X, Y, slope.T, cmap=cmap, vmin=-absmax, vmax=absmax, levels=nlevls)
+    plt.colorbar(im, ax = ax, label=cbar_label)
 
     # Stipple the points that are significant
     ax.scatter(stipp_coord_month, stipp_coord_lat, color='black', s=1.5)
 
     # Plot climatology contour
-    ax.contour(X, Y, climatology.T, colors='k')
+    ax.contour(X, Y, climatology.T, colors='k', linewidths=1)
     
     ax.set_xlim(5, 12)
 
     ax.set_xlabel('Month', fontsize=14)
     ax.set_ylabel('Latitude', fontsize=14)
-    ax.set_title(ds.name)
+    ax.set_title(title)
 
