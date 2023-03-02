@@ -80,7 +80,7 @@ class Regression:
 class RegressionU1SPV(Regression):
     """Subclass of Regression for handling the input for regressing zonal mean anomalies onto the
     SPV_Index. At the moment using 1979-2014 is hardcoded."""
-    def __init__(self, model_name, ua10_path, variable_path, plev=100, variable_name = 'ua'):
+    def __init__(self, model_name, ua10_path, variable_path, plev=None, variable_name = 'ua'):
         """
         :param model_name:
         :type model_name: str
@@ -92,36 +92,54 @@ class RegressionU1SPV(Regression):
         :type plev: int
         """
         # Read in 1hPa climatology and anomalies
-        climatology, anomalies = RegressionU1SPV.anomalies_read_in(variable_path, plev)
+        climatology, anomalies = self.anomalies_read_in(variable_path, plev)
         # Calculate SPV_Index
-        spv_index = RegressionU1SPV.calc_spv_index(ua10_path)
+        spv_index = self.calc_spv_index(ua10_path)
         # Do the regression
         super().__init__(model_name=model_name, index=spv_index, anomalies=anomalies[variable_name])
         self.climatology = climatology[variable_name]
 
-    @staticmethod
-    def anomalies_read_in(datapath, plev):
+    def anomalies_read_in(self, datapath, plev):
         """Read in data and calculate monthly anomalies compared to climatology."""
-        model = RegressionU1SPV.xarray_read_in(datapath, plev = plev)
+        model = self.xarray_read_in(datapath, plev = plev)
         model = model.sel(lat=slice(0, -90))
         climatolotgy = model.groupby("time.month").mean("time")
         anomalies = model.groupby("time.month") - climatolotgy
         return climatolotgy, anomalies
 
-    @staticmethod
-    def calc_spv_index(datapath):
+
+    def calc_spv_index(self,datapath):
         """Read in data and calculate the SPV index as the SON mean at 60hPa."""
-        model = RegressionU1SPV.xarray_read_in(datapath, plev = 1000)
+        model = self.xarray_read_in(datapath, plev = 1000)
         model = model.sel(lat=-60, method="nearest")
         spv_index = model.groupby("time.season")['SON'].groupby('time.year').mean('time')
         spv_index = spv_index['ua'] - spv_index['ua'].mean()
         return spv_index
 
-    @staticmethod
-    def xarray_read_in(datapath, plev):
+    def xarray_read_in(self, datapath, plev):
         model = xr.load_dataset(datapath)
         model = model.sel(plev=plev, method="nearest")
         model = model.sel(time=slice("1979-01-01", "2014-12-30"))
+        return model
+
+class RegressionERA5(RegressionU1SPV):
+
+    def calc_spv_index(self, datapath):
+        """Read in data and calculate the SPV index as the SON mean at 60hPa."""
+        model = self.xarray_read_in(datapath, plev = None)
+        model = model.sel(lat=-60, method="nearest")
+        spv_index = model.groupby("time.season")['SON'].groupby('time.year').mean('time')
+        spv_index = spv_index['u'] - spv_index['u'].mean()
+        return spv_index
+
+    def xarray_read_in(self, datapath, plev):
+        model = xr.load_dataset(datapath)
+        
+        if plev is not None:
+            model = model.sel(level=plev, method="nearest")
+            model = model.rename({'latitude': 'lat',})
+            
+        model = model.sel(time=slice("1980-01-01", "2014-12-30"))
         return model
 
 def plot_slope_data(ds, ax, cbar_label = '', title = None):
@@ -163,7 +181,7 @@ def plot_slope_data(ds, ax, cbar_label = '', title = None):
     im = ax.contourf(X, Y, slope.T, cmap=cmap, vmin=-absmax, vmax=absmax, levels=nlevls)
     plt.colorbar(im, ax = ax, label=cbar_label)
 
-    # Stipple the points that are significant
+    # Stipv the points that are significant
     ax.scatter(stipp_coord_month, stipp_coord_lat, color='black', s=1.5)
 
     # Plot climatology contour
