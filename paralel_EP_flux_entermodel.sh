@@ -16,6 +16,8 @@ dataList_u=()
 dataList_v=()
 dataList_t=()
 
+mkdir $path_out/$modelin
+
 for model in $modelin
 do
 for dir in $path/*/
@@ -105,6 +107,7 @@ do
      cdo remapbil,n32 "${dataList_u[i]}" $path_out/$modelin/"temp_u_T42.nc"
      cdo remapbil,n32 "${dataList_v[i]}" $path_out/$modelin/"temp_v_T42.nc"
      cdo remapbil,n32 "${dataList_t[i]}" $path_out/$modelin/"temp_t_T42.nc"
-     python /home/users/tabu/cmip6_stratosphere/EP_fluxes.py "${dataList_u[i]}" $path_out/$modelin/"temp_u_T42.nc" $path_out/$modelin/"temp_v_T42.nc" $path_out/$modelin/"temp_t_T42.nc"
+     python /home/users/tabu/eunpa_lim_project/EP_fluxes.py "${dataList_u[i]}" $path_out/$modelin/"temp_u_T42.nc" $path_out/$modelin/"temp_v_T42.nc" $path_out/$modelin/"temp_t_T42.nc"
+     rm $path_out/$modelin/"temp_u_T42.nc" $path_out/$modelin/"temp_v_T42.nc" $path_out/$modelin/"temp_t_T42.nc"
 done
 
