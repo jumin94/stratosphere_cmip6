@@ -139,17 +139,18 @@ def get_data_files(path,model):
 def open_data(path):
 	return xr.open_dataset(path)
 
-def main(argv):
-	path_ua = argv[2]; path_va = argv[3];path_ta = argv[4]
-	file_name = argv[1].split("/",14)[-1]
-	list_name = file_name.split("_",8)
-	model = list_name[2]
-	#path_ua = "/".join(path.split("/",13)[:11])+'/ua/'+"/".join(path.split("/",13)[12:])
-	path_out = '/gws/nopw/j04/ncas_generic/users/jmindlin/cmip6/historical_EP_fluxes'
+def main(config):
+    """Run the diagnostic."""
+    cfg=get_cfg(os.path.join(config["run_dir"],"settings.yml"))
+    print(cfg)
+    meta = group_metadata(config["input_data"].values(), "alias")
+    #print(f"\n\n\n{meta}")
+    for alias, alias_list in meta.items():
+	path_out = config["work_dir"]
 	os.chdir(path_out)
 	os.getcwd()
-	os.makedirs(model,exist_ok=True)
-	os.chdir(path_out+'/'+model)
+	os.makedirs(alias,exist_ok=True)
+	os.chdir(path_out+'/'+alias)
 	os.getcwd()
 	os.makedirs('heat_fluxes',exist_ok=True)
 	os.makedirs('momentum_fluxes',exist_ok=True)
@@ -157,11 +158,11 @@ def main(argv):
 	os.makedirs('momentum_flux_div',exist_ok=True)
 	os.makedirs('total_flux_div',exist_ok=True)
 	#Open data
-	u = open_data(path_ua)
-	v = open_data(path_va)
-	t = open_data(path_ta)
-	file_name = argv[1].split("/",14)[-1]
-	list_name = file_name.split("_",8)
+	u = [xr.open_dataset(m["filename"])[m["short_name"]] for m in alias_list if m["variable_group"] == "ua"]
+	v = [xr.open_dataset(m["filename"])[m["short_name"]] for m in alias_list if m["variable_group"] == "va"]
+	t = [xr.open_dataset(m["filename"])[m["short_name"]] for m in alias_list if m["variable_group"] == "ta"]
+	file_name = m["filename"].split("/",12)[-1]
+	list_name = file_name.split("_",6)
 	print(list_name)
 	#Compute
 	EPp, EPphi = EP_fluxes(u,v,t)
@@ -173,16 +174,14 @@ def main(argv):
 	div_EPtot = div_EPtot.to_dataset(name='div_EPtot')
 	print('EP_heat_flux_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
 	#Save
-	EPp = EPp.to_netcdf(path_out+'/'+list_name[2]+'/heat_fluxes/EP_heat_flux_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
-	EPphi = EPphi.to_netcdf(path_out+'/'+list_name[2]+'/momentum_fluxes/EP_momentum_flux_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
-	div_EPp = div_EPp.to_netcdf(path_out+'/'+list_name[2]+'/heat_flux_div/EP_heat_flux_divergence_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
-	div_EPphi = div_EPphi.to_netcdf(path_out+'/'+list_name[2]+'/momentum_flux_div/EP_momentum_flux_divergence_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
-	div_EPtot = div_EPtot.to_netcdf(path_out+'/'+list_name[2]+'/total_flux_div/EP_total_flux_divergence_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
-	print('Finished with file ',"/".join(list_name))
+	EPp = EPp.to_netcdf(path_out+'/'+alias+'/heat_fluxes/EP_heat_flux_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
+	EPphi = EPphi.to_netcdf(path_out+'/'+alias+'/momentum_fluxes/EP_momentum_flux_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
+	div_EPp = div_EPp.to_netcdf(path_out+'/'+alias+'/heat_flux_div/EP_heat_flux_divergence_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
+	div_EPphi = div_EPphi.to_netcdf(path_out+'/'+alias+'/momentum_flux_div/EP_momentum_flux_divergence_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
+	div_EPtot = div_EPtot.to_netcdf(path_out+'/'+alias+'/total_flux_div/EP_total_flux_divergence_'+list_name[1]+'_'+list_name[2]+'_'+list_name[3]+'_'+list_name[4]+'_'+list_name[6].split(".",2)[0]+'_T42.nc')
+	print('Finished with file ',"/".join(alias))
 
 		
-if __name__ == '__main__':
-	main(sys.argv)
-
-
-
+if __name__ == "__main__":
+    with run_diagnostic() as config:
+        main(config)

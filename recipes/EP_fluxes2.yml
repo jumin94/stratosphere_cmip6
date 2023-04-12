@@ -1,0 +1,95 @@
+---
+
+documentation:
+  title: EP fluxes historical simulations
+  description: | 
+    diagnostic of EP fluxes in historical simulations
+  authors:
+    - cos_josep
+
+
+datasets:
+  - &historical {project: CMIP6, exp: ['historical'], dataset: KACE-1-0-G, ensemble: r1i1p1f1, grid: gr}
+  - { <<: *historical, dataset: MIROC6, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: MIROC-ES2L, ensemble: r1i1p1f2, grid: gn}
+  - { <<: *historical, dataset: MPI-ESM-1-2-HAM, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: MPI-ESM1-2-HR, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: MPI-ESM1-2-LR, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: MRI-ESM2-0, ensemble: r1i1p1f1, grid: gn}
+
+preprocessors:  
+  general_preproc: &general_preproc
+    extract_region:
+      start_latitude: -90
+      end_latitude: 0
+      start_longitude: 0
+      end_longitude: 360
+    regrid:
+      target_grid: 2.5x2.5
+      scheme: 
+        reference: iris.analysis:AreaWeighted
+        mdtol: 0.7
+
+
+diagnostics:
+  EP_fluxes_calculation: 
+    variables:
+      ta: 
+        short_name: ta
+        mip: day
+        start_year: &start_year 1979
+        end_year: &end_year 2014
+        preprocessor: general_preproc
+      ua:
+        short_name: ua
+        mip: day
+        start_year: *start_year 
+        end_year: *end_year
+        preprocessor: general_preproc
+      va:
+        short_name: va
+        mip: day
+        start_year: *start_year
+        end_year: *end_year
+        preprocessor: general_preproc
+
+    scripts:
+      EP_fluxes:
+        script: /home/users/tabu/scripts/EP_fluxes_esmvaltool.py 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
