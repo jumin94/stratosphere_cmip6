@@ -1,0 +1,716 @@
+
+---
+
+documentation:
+  title: title
+  description: |
+    descr
+  authors:
+    - cos_josep
+
+datasets:
+  - &historical {project: CMIP6, exp: ['historical'], dataset: ACCESS-CM2, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: ACCESS-ESM1-5, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: AWI-ESM-1-1-LR, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: BCC-ESM1, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: CanESM5, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: CESM2-FV2, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: CESM2-WACCM-FV2, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: CESM2-WACCM, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: CMCC-CM2-HR4, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: CMCC-CM2-SR5, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: CNRM-CM6-1, ensemble: r1i1p1f2, grid: gr}
+  - { <<: *historical, dataset: CNRM-CM6-1-HR, ensemble: r1i1p1f2, grid: gr}
+  - { <<: *historical, dataset: CNRM-ESM2-1, ensemble: r1i1p1f2, grid: gr}
+  - { <<: *historical, dataset: EC-Earth3-AerChem, ensemble: r1i1p1f1, grid: gr}
+  - { <<: *historical, dataset: EC-Earth3-CC, ensemble: r1i1p1f1, grid: gr}
+  - { <<: *historical, dataset: FGOALS-f3-L, ensemble: r1i1p1f1, grid: gr}
+  - { <<: *historical, dataset: FGOALS-g3, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: GISS-E2-1-G, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: GISS-E2-1-G, ensemble: r1i1p1f2, grid: gn}
+  - { <<: *historical, dataset: HadGEM3-GC31-LL, ensemble: r1i1p1f3, grid: gn}
+  - { <<: *historical, dataset: HadGEM3-GC31-MM, ensemble: r1i1p1f3, grid: gn}
+  - { <<: *historical, dataset: IITM-ESM, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: IPSL-CM6A-LR, ensemble: r1i1p1f1, grid: gr}
+  - { <<: *historical, dataset: KACE-1-0-G, ensemble: r1i1p1f1, grid: gr}
+  - { <<: *historical, dataset: MIROC6, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: MIROC-ES2L, ensemble: r1i1p1f2, grid: gn}
+  - { <<: *historical, dataset: MPI-ESM-1-2-HAM, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: MPI-ESM1-2-HR, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: MPI-ESM1-2-LR, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: MRI-ESM2-0, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: NESM3, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: NorESM2-LM, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: NorESM2-MM, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: SAM0-UNICON, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: TaiESM1, ensemble: r1i1p1f1, grid: gn}
+  - { <<: *historical, dataset: UKESM1-0-LL, ensemble: r1i1p1f2, grid: gn}
+
+preprocessors:
+  general_preproc: &general_preproc
+    extract_region:
+      start_latitude: -90
+      end_latitude: 0
+      start_longitude: 0
+      end_longitude: 360
+    regrid:
+      target_grid: 2.5x2.5
+      scheme:
+        reference: iris.analysis:AreaWeighted
+        mdtol: 0.7
+
+diagnostics:
+  EP_fluxes:
+    variables:
+      ta1979:
+        end_year: 1979
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1979
+      ta1980:
+        end_year: 1980
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1980
+      ta1981:
+        end_year: 1981
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1981
+      ta1982:
+        end_year: 1982
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1982
+      ta1983:
+        end_year: 1983
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1983
+      ta1984:
+        end_year: 1984
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1984
+      ta1985:
+        end_year: 1985
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1985
+      ta1986:
+        end_year: 1986
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1986
+      ta1987:
+        end_year: 1987
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1987
+      ta1988:
+        end_year: 1988
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1988
+      ta1989:
+        end_year: 1989
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1989
+      ta1990:
+        end_year: 1990
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1990
+      ta1991:
+        end_year: 1991
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1991
+      ta1992:
+        end_year: 1992
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1992
+      ta1993:
+        end_year: 1993
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1993
+      ta1994:
+        end_year: 1994
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1994
+      ta1995:
+        end_year: 1995
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1995
+      ta1996:
+        end_year: 1996
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1996
+      ta1997:
+        end_year: 1997
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1997
+      ta1998:
+        end_year: 1998
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1998
+      ta1999:
+        end_year: 1999
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 1999
+      ta2000:
+        end_year: 2000
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2000
+      ta2001:
+        end_year: 2001
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2001
+      ta2002:
+        end_year: 2002
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2002
+      ta2003:
+        end_year: 2003
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2003
+      ta2004:
+        end_year: 2004
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2004
+      ta2005:
+        end_year: 2005
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2005
+      ta2006:
+        end_year: 2006
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2006
+      ta2007:
+        end_year: 2007
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2007
+      ta2008:
+        end_year: 2008
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2008
+      ta2009:
+        end_year: 2009
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2009
+      ta2010:
+        end_year: 2010
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2010
+      ta2011:
+        end_year: 2011
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2011
+      ta2012:
+        end_year: 2012
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2012
+      ta2013:
+        end_year: 2013
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2013
+      ta2014:
+        end_year: 2014
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ta
+        start_year: 2014
+      ua1979:
+        end_year: 1979
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1979
+      ua1980:
+        end_year: 1980
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1980
+      ua1981:
+        end_year: 1981
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1981
+      ua1982:
+        end_year: 1982
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1982
+      ua1983:
+        end_year: 1983
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1983
+      ua1984:
+        end_year: 1984
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1984
+      ua1985:
+        end_year: 1985
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1985
+      ua1986:
+        end_year: 1986
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1986
+      ua1987:
+        end_year: 1987
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1987
+      ua1988:
+        end_year: 1988
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1988
+      ua1989:
+        end_year: 1989
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1989
+      ua1990:
+        end_year: 1990
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1990
+      ua1991:
+        end_year: 1991
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1991
+      ua1992:
+        end_year: 1992
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1992
+      ua1993:
+        end_year: 1993
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1993
+      ua1994:
+        end_year: 1994
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1994
+      ua1995:
+        end_year: 1995
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1995
+      ua1996:
+        end_year: 1996
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1996
+      ua1997:
+        end_year: 1997
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1997
+      ua1998:
+        end_year: 1998
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1998
+      ua1999:
+        end_year: 1999
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 1999
+      ua2000:
+        end_year: 2000
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2000
+      ua2001:
+        end_year: 2001
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2001
+      ua2002:
+        end_year: 2002
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2002
+      ua2003:
+        end_year: 2003
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2003
+      ua2004:
+        end_year: 2004
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2004
+      ua2005:
+        end_year: 2005
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2005
+      ua2006:
+        end_year: 2006
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2006
+      ua2007:
+        end_year: 2007
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2007
+      ua2008:
+        end_year: 2008
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2008
+      ua2009:
+        end_year: 2009
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2009
+      ua2010:
+        end_year: 2010
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2010
+      ua2011:
+        end_year: 2011
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2011
+      ua2012:
+        end_year: 2012
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2012
+      ua2013:
+        end_year: 2013
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2013
+      ua2014:
+        end_year: 2014
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: ua
+        start_year: 2014
+      va1979:
+        end_year: 1979
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1979
+      va1980:
+        end_year: 1980
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1980
+      va1981:
+        end_year: 1981
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1981
+      va1982:
+        end_year: 1982
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1982
+      va1983:
+        end_year: 1983
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1983
+      va1984:
+        end_year: 1984
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1984
+      va1985:
+        end_year: 1985
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1985
+      va1986:
+        end_year: 1986
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1986
+      va1987:
+        end_year: 1987
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1987
+      va1988:
+        end_year: 1988
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1988
+      va1989:
+        end_year: 1989
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1989
+      va1990:
+        end_year: 1990
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1990
+      va1991:
+        end_year: 1991
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1991
+      va1992:
+        end_year: 1992
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1992
+      va1993:
+        end_year: 1993
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1993
+      va1994:
+        end_year: 1994
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1994
+      va1995:
+        end_year: 1995
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1995
+      va1996:
+        end_year: 1996
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1996
+      va1997:
+        end_year: 1997
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1997
+      va1998:
+        end_year: 1998
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1998
+      va1999:
+        end_year: 1999
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 1999
+      va2000:
+        end_year: 2000
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2000
+      va2001:
+        end_year: 2001
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2001
+      va2002:
+        end_year: 2002
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2002
+      va2003:
+        end_year: 2003
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2003
+      va2004:
+        end_year: 2004
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2004
+      va2005:
+        end_year: 2005
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2005
+      va2006:
+        end_year: 2006
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2006
+      va2007:
+        end_year: 2007
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2007
+      va2008:
+        end_year: 2008
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2008
+      va2009:
+        end_year: 2009
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2009
+      va2010:
+        end_year: 2010
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2010
+      va2011:
+        end_year: 2011
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2011
+      va2012:
+        end_year: 2012
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2012
+      va2013:
+        end_year: 2013
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2013
+        va2014:
+        end_year: 2014
+        mip: Amon
+        preprocessor: general_preproc
+        short_name: va
+        start_year: 2014
+
+    scripts:
+      EP_fluxes:
+        script: /home/users/tabu/scripts/EP_fluxes_esmvaltool.py

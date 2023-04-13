@@ -32,7 +32,7 @@ diagnostics:
         short_name: ta
         mip: day
         start_year: &start_year 1979
-        end_year: &end_year 1981
+        end_year: &end_year 1979
         preprocessor: general_preproc
       ua:
         short_name: ua
