@@ -1,4 +1,5 @@
 *.pdf
+*Plots/
 
 *.bundle.*
 lib/

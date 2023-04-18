@@ -4,6 +4,7 @@ import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.ticker as ticker
 
 class Regression:
     """Regressed monthly resolved zonal mean anomalies onto a given yearly index. It saves the slope and corresponding pvalues (
@@ -102,7 +103,10 @@ class RegressionU1SPV(Regression):
     def anomalies_read_in(self, datapath, plev):
         """Read in data and calculate monthly anomalies compared to climatology."""
         model = self.xarray_read_in(datapath, plev = plev)
-        model = model.sel(lat=slice(0, -90))
+        if model.coords['lat'][0]<model.coords['lat'][-1]:
+            model = model.sel(lat=slice(-90, 0))
+        else:
+            model = model.sel(lat=slice(0, -90))
         climatolotgy = model.groupby("time.month").mean("time")
         anomalies = model.groupby("time.month") - climatolotgy
         return climatolotgy, anomalies
@@ -142,13 +146,15 @@ class RegressionERA5(RegressionU1SPV):
         model = model.sel(time=slice("1980-01-01", "2014-12-30"))
         return model
 
-def plot_slope_data(ds, ax, cbar_label = '', title = None):
+def plot_slope_data(ds, ax, cbar_label = '', title = None, scicbar=False):
     """Plot regression slopes with stippling for significance and climatology contours.
 
     :param ds: Holds the slope, pvalue and climatology data
     :type ds: Instance of 'Regression' or one of its subclasses
     :param ax:
     :type ax:
+    :param scicbar: Whether or not to use scientific notation for the colorbar labels
+    :type scicbar: Boolean
     """
     nlevls = 14
     slope = ds.slope
@@ -179,7 +185,13 @@ def plot_slope_data(ds, ax, cbar_label = '', title = None):
                                                  N=nlevls-1,)
     
     im = ax.contourf(X, Y, slope.T, cmap=cmap, vmin=-absmax, vmax=absmax, levels=nlevls)
-    plt.colorbar(im, ax = ax, label=cbar_label)
+    cb = plt.colorbar(im, ax = ax, label=cbar_label)
+
+    if scicbar:
+        # Make scientific colorbar ticks labels
+        cb.formatter.set_powerlimits((0, 0))
+        cb.ax.yaxis.set_offset_position('right')                         
+        cb.update_ticks()
 
     # Stipv the points that are significant
     ax.scatter(stipp_coord_month, stipp_coord_lat, color='black', s=1.5)
