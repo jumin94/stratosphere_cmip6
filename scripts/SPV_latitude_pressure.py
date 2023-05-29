@@ -9,6 +9,7 @@ import sys
 import bottleneck as bn #version 1.0.0
 import xarray as xr
 import numpy as np
+import Regression as rg
 import statsmodels.api as sm
 import pandas as pd
 import json
@@ -18,11 +19,12 @@ from scipy import signal
 import matplotlib.pyplot as plt
 
 def jet_lat_strength(jet_data,lon1=0,lon2=360):
-    jet_data = jet_data.sel(time=is_jja(jet_data['time.month']))
-    jet_40_80 = jet_data.mean(dim=time).sel(lat=slice(-80,-40)).sel(lon=slice(lon1,lon2)).mean(dim='lon')**2
+    jet_data = jet_data.sel(time=is_jja(jet_data['time.month'])).sel(plev=100,method='nearest')
+    jet_40_80 = jet_data.mean(dim='time').sel(lat=slice(-80,-40)).sel(lon=slice(lon1,lon2)).mean(dim='lon')**2
     lat = jet_40_80.lat
-    jet_lat = (jet_40_80*lat).sum(dim='lat')/(jet_40_80).sum(dim='lat')
-    jet_strength = jet_data.groupby('time.year').mean(dim='time').sel(lat=slice(jet_lat-5,jet_lat+5)).sel(lon=slice(lon1,lon2)).mean(dim='lon'))
+    #jet_lat = ((jet_40_80*lat).sum(dim='lat')/(jet_40_80).sum(dim='lat')).ua.values
+    jet_lat = -80
+    jet_strength = jet_data.groupby('time.year').mean(dim='time').sel(lat=slice(jet_lat-5,jet_lat+5)).sel(lon=slice(lon1,lon2)).mean(dim='lon').mean(dim='lat') - jet_data.mean(dim='time').sel(lat=slice(jet_lat-5,jet_lat+5)).sel(lon=slice(lon1,lon2)).mean(dim='lon').mean(dim='lat')
     return jet_lat,jet_strength
 
 def is_jja(month):
@@ -31,6 +33,9 @@ def is_jja(month):
 def plot_function(data):
     fig = plt.figure()
     plt.plot(data.time,data.lev)
+
+def regression_function(ts,data):
+    """ Regrss SPV in JJA vs pressure - month"""
 
 def main(config):
     """Run the diagnostic."""
@@ -51,11 +56,18 @@ def main(config):
         u = [xr.open_dataset(m["filename"]) for m in alias_list if m["short_name"] == "ua"]
         #Compute centroid
         centroid_lat, jja_strength = jet_lat_strength(u[0])
-        lat_pressure_field = u[0].sel(lat==centroid_lat)
+        time_pressure_field = u[0].sel(lat=centroid_lat,method='nearest').mean(dim='lon')
+        time_pressure_anom = time_pressure_field - time_pressure_field.groupby('time.month').mean(dim='time')
         #Save 
-        LP = lat_pressure_field.to_netcdf(path_out+'/'+alias+'/time_pressure/time_pressure_'+alias+'_T42.nc')
+        TP  = time_pressure_field.to_netcdf(path_out+'/time_pressure_'+alias+'_T42.nc')
+        print(time_pressure_field.plev)
+        regression = rg.Regression(alias+' '+str(np.round(centroid_lat,3)),jja_strength['ua'],time_pressure_field['ua'],'plev')
+        regression.climatology = time_pressure_field.groupby('time.month').mean(dim='time')['ua']
+        path_plot = config["plot_dir"]
+        fig,ax = plt.subplots()
+        rg.plot_slope_data(regression,ax,spatial_coord='plev')
+        fig.savefig(path_plot+'/time_pressure_JJA_SPV_regression_forced80S_'+alias+'.png')
         print('Finished with year model '+alias)
-
 
 		
 if __name__ == "__main__":
