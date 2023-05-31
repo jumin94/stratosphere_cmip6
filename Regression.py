@@ -1,11 +1,11 @@
-from scipy.stats import linregress
-import xarray as xr
-
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-import matplotlib.ticker as ticker
 from abc import ABC, abstractmethod
+
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import numpy as np
+import xarray as xr
+from scipy.stats import linregress
+
 
 class Regression:
     """Regressed monthly resolved zonal mean anomalies onto a given yearly index. It saves the slope and corresponding pvalues (
@@ -19,14 +19,16 @@ class Regression:
         :type index: Xarray array,  (nyears)
         :param anomalies: zonal mean anomalies
         :type anomalies: Xarray array, (ntime, nlat/npres). Coordinate names "time" and "lat"/"pres"
+        :param spatial_coord: name of the spatial coordinate that is resolved, e.g. 'lat' or 'lev'
+        :type spatial_coord: string
         """
 
         self._index = index
         self.name = model_name
         self._anomalies = anomalies
         # Check that their is an index entry for every year of data
-        assert self.index.size == self.anomalies.shape[0]/12
-        
+        assert self.index.size == self.anomalies.shape[0] / 12
+
         self.spatial_coord = spatial_coord
 
         self._slope, self._pvalue = self.regression()
@@ -68,7 +70,7 @@ class Regression:
 
         # For every spatial point, group the data by month
         for i in range(n_spatial):
-            groups = self.anomalies.isel({self.spatial_coord:i}).groupby("time.month")
+            groups = self.anomalies.isel({self.spatial_coord: i}).groupby("time.month")
             # For every month, regress the anomaly values against the index. The anomaly values have the size nyears,
             # as they are the anomalies for the specific month at the specific latitude.
             for month in range(12):
@@ -77,16 +79,20 @@ class Regression:
                 p_array[month, i] = p
 
         # Save the slope and pvalue in xarrays datasets.
-        slope = xr.DataArray(slope_array, coords=[np.arange(12) + 1, self.anomalies[self.spatial_coord]], dims=["month", self.spatial_coord])
-        pvalue = xr.DataArray(p_array, coords=[np.arange(12) + 1, self.anomalies[self.spatial_coord]], dims=["month", self.spatial_coord])
+        slope = xr.DataArray(slope_array, coords=[np.arange(12) + 1, self.anomalies[self.spatial_coord]],
+                             dims=["month", self.spatial_coord])
+        pvalue = xr.DataArray(p_array, coords=[np.arange(12) + 1, self.anomalies[self.spatial_coord]],
+                              dims=["month", self.spatial_coord])
 
         return slope, pvalue
 
 
 class RegressionSPV(Regression, ABC):
 
-    def __init__(self, model_name, ua10_path, variable_path, plev=None, variable_name = 'ua', spv_index_latitude=-60, **kwargs):
-        """
+    def __init__(self, model_name, ua10_path, variable_path, plev=None, variable_name='ua', spv_index_latitude=-60,
+                 **kwargs):
+        """Child class of Regression to set up general data handling beforehand.
+
         :param model_name:
         :type model_name: str
         :param variable_path: path to zonal mean (monthly mean) data
@@ -96,7 +102,7 @@ class RegressionSPV(Regression, ABC):
         :param plev: pressure level to use
         :type plev: int
         """
-        
+
         self.spv_index_latitude = spv_index_latitude
         # Read in 1hPa climatology and anomalies
         climatology, anomalies = self.anomalies_read_in(variable_path, plev)
@@ -105,10 +111,10 @@ class RegressionSPV(Regression, ABC):
         # Do the regression
         super().__init__(model_name=model_name, index=spv_index, anomalies=anomalies[variable_name], **kwargs)
         self.climatology = climatology[variable_name]
-    
-    def calc_spv_index(self,datapath):
+
+    def calc_spv_index(self, datapath):
         """Read in data and calculate the SPV index as the SON mean at 60hPa (or a different supplied latitude)."""
-        model = self.xarray_read_in(datapath, plev = 1000)
+        model = self.xarray_read_in(datapath, plev=1000)
         model = model.sel(lat=self.spv_index_latitude, method="nearest")
         spv_index = model.groupby("time.season")['SON'].groupby('time.year').mean('time')
         spv_index = spv_index['ua'] - spv_index['ua'].mean()
@@ -130,13 +136,13 @@ class RegressionU1SPV(RegressionSPV):
     """Subclass of Regression for handling the input for regressing zonal mean anomalies latitudinally resolved onto the
     SPV_Index. At the moment using 1979-2014 is hardcoded."""
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, spatial_coord='lat', **kwargs)
 
     def anomalies_read_in(self, datapath, plev):
         """Read in data and calculate monthly anomalies compared to climatology."""
         model = self.xarray_read_in(datapath, plev=plev)
-        if model.coords['lat'][0]<model.coords['lat'][-1]:
+        if model.coords['lat'][0] < model.coords['lat'][-1]:
             model = model.sel(lat=slice(-90, 0))
         else:
             model = model.sel(lat=slice(0, -90))
@@ -144,29 +150,31 @@ class RegressionU1SPV(RegressionSPV):
         anomalies = model.groupby("time.month") - climatolotgy
         return climatolotgy, anomalies
 
+
 class RegressionPresSPV(RegressionSPV):
     """Subclass of Regression for handling the input for regressing zonal mean anomalies pressure resolved onto the
     SPV_Index. At the moment using 1979-2014 is hardcoded."""
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, spatial_coord='plev', **kwargs)
 
     def anomalies_read_in(self, datapath, spv_index_lat):
         """Read in data and calculate monthly anomalies compared to climatology."""
 
-        model = self.xarray_read_in(datapath, plev = None)
+        model = self.xarray_read_in(datapath, plev=None)
         model = model.sel(lat=self.spv_index_latitude, method="nearest")
         climatolotgy = model.groupby("time.month").mean("time")
         anomalies = model.groupby("time.month") - climatolotgy
         return climatolotgy, anomalies
-    
 
 
 class RegressionERA5(RegressionSPV):
+    """Overwrites functionatlity of RegressionSPV that have to be different for the ERA5 data.
+    This is not intended to be called directly."""
 
     def calc_spv_index(self, datapath):
         """Read in data and calculate the SPV index as the SON mean at 60hPa."""
-        model = self.xarray_read_in(datapath, plev = None)
+        model = self.xarray_read_in(datapath, plev=None)
         model = model.sel(lat=self.spv_index_latitude, method="nearest")
         spv_index = model.groupby("time.season")['SON'].groupby('time.year').mean('time')
         spv_index = spv_index['u'] - spv_index['u'].mean()
@@ -174,21 +182,30 @@ class RegressionERA5(RegressionSPV):
 
     def xarray_read_in(self, datapath, plev):
         model = xr.load_dataset(datapath)
-        
+
         if plev is not None:
             model = model.sel(level=plev, method="nearest")
-            model = model.rename({'latitude': 'lat',})
-            
+            model = model.rename({'latitude': 'lat', })
+
         model = model.sel(time=slice("1980-01-01", "2014-12-30"))
         return model
 
-class RegressioEra5U1SPV(RegressionERA5,RegressionU1SPV):
+
+class RegressioEra5U1SPV(RegressionERA5, RegressionU1SPV):
+    """Used for ERA5 data for regressing zonal mean anomalies latitudinally resolved onto the SPV_Index. At the
+    moment using 1979-2014 is hardcoded. Gets the datasetup from 'RegressionERA5' and the functionality from
+    'RegressionU1SPV' """
     pass
 
-class RegressioEra5PresSPV(RegressionERA5,RegressionPresSPV):
+
+class RegressioEra5PresSPV(RegressionERA5, RegressionPresSPV):
+    """Used for ERA5 data for regressing zonal mean anomalies pressure resolved onto the SPV_Index. At the
+    moment using 1979-2014 is hardcoded. Gets the datasetup from 'RegressionERA5' and the functionality from
+    'RegressionPresSPV' """
     pass
 
-def plot_slope_data(ds, ax, cbar_label = '', title = None, scicbar=False, spatial_coord='lat'):
+
+def plot_slope_data(ds, ax, cbar_label='', title=None, scicbar=False, spatial_coord='lat'):
     """Plot regression slopes with stippling for significance and climatology contours.
 
     :param ds: Holds the slope, pvalue and climatology data
@@ -197,6 +214,12 @@ def plot_slope_data(ds, ax, cbar_label = '', title = None, scicbar=False, spatia
     :type ax:
     :param scicbar: Whether or not to use scientific notation for the colorbar labels
     :type scicbar: Boolean
+    @param spatial_coord:
+    @type spatial_coord: str
+    @param title: Title label
+    @type title: str
+    @param cbar_label: Colorbar label
+    @type cbar_label: str
     """
     nlevls = 14
     slope = ds.slope
@@ -213,26 +236,26 @@ def plot_slope_data(ds, ax, cbar_label = '', title = None, scicbar=False, spatia
     stipp_idx_month, stipp_idx_lat = np.where(pvalue < 0.05)
     stipp_coord_lat = pvalue.coords[spatial_coord][stipp_idx_lat]
     stipp_coord_month = pvalue.coords['month'][stipp_idx_month]
-    
+
     y = slope.coords[spatial_coord].data
     x = slope.month.data
     X, Y = np.meshgrid(x, y)
 
     absmax = max(abs(slope.min()), abs(slope.max()))
     # Plot the Slope
-    cmap = mcolors.LinearSegmentedColormap.from_list(name='red_white_blue', 
-                                                 colors =[(0, 0, 1), 
-                                                          (1, 1., 1), 
-                                                          (1, 0, 0)],
-                                                 N=nlevls-1,)
-    
+    cmap = mcolors.LinearSegmentedColormap.from_list(name='red_white_blue',
+                                                     colors=[(0, 0, 1),
+                                                             (1, 1., 1),
+                                                             (1, 0, 0)],
+                                                     N=nlevls - 1, )
+
     im = ax.contourf(X, Y, slope.T, cmap=cmap, vmin=-absmax, vmax=absmax, levels=nlevls)
-    cb = plt.colorbar(im, ax = ax, label=cbar_label)
+    cb = plt.colorbar(im, ax=ax, label=cbar_label)
 
     if scicbar:
         # Make scientific colorbar ticks labels
         cb.formatter.set_powerlimits((0, 0))
-        cb.ax.yaxis.set_offset_position('right')                         
+        cb.ax.yaxis.set_offset_position('right')
         cb.update_ticks()
 
     # Stipv the points that are significant
@@ -240,7 +263,7 @@ def plot_slope_data(ds, ax, cbar_label = '', title = None, scicbar=False, spatia
 
     # Plot climatology contour
     ax.contour(X, Y, climatology.T, colors='k', linewidths=1)
-    
+
     ax.set_xlim(5, 12)
 
     ax.set_xlabel('Month', fontsize=14)
@@ -253,4 +276,3 @@ def plot_slope_data(ds, ax, cbar_label = '', title = None, scicbar=False, spatia
     else:
         ax.set_ylabel(spatial_coord, fontsize=14)
     ax.set_title(title)
-
